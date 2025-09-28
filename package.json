@@ -15,7 +15,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./package.json": "./package.json",
-    "./streams.min.js": "./dist/streams.min.js"
+    "./zlib-streams.min.js": "./dist/zlib-streams.min.js"
   },
   "repository": {
     "type": "git",

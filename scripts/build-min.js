@@ -8,7 +8,7 @@ import { readFileSync, writeFileSync } from "fs";
 import { minify } from "terser";
 
 const entry = path.resolve(process.cwd(), "src/streams-api.ts");
-const out = path.resolve(process.cwd(), "dist/streams.min.js");
+const out = path.resolve(process.cwd(), "dist/zlib-streams.min.js");
 
 esbuild
   .build({

@@ -28,7 +28,7 @@ export function ERR_RETURN(strm: Stream, err: number): number {
   try {
     strm.msg = ERR_MSG(err);
   } catch (error) {
-    strm.msg = `"zlib error " + String(err); (${error})`;
+    strm.msg = "zlib error " + String(err) + " (" + error + ")";
   }
   return err;
 }
@@ -148,9 +148,9 @@ export function createDeflateState(strm: DeflateStream): DeflateState {
     _match_start: 0,
     _heap_len: 0,
     _heap_max: 0,
-  _dyn_ltree: new Array(HEAP_SIZE).fill(0).map(() => createHuffmanTreeNode()),
-  _dyn_dtree: new Array(2 * D_CODES + 1).fill(0).map(() => createHuffmanTreeNode()),
-  _bl_tree: new Array(2 * BL_CODES + 1).fill(0).map(() => createHuffmanTreeNode()),
+    _dyn_ltree: new Array(HEAP_SIZE).fill(0).map(() => createHuffmanTreeNode()),
+    _dyn_dtree: new Array(2 * D_CODES + 1).fill(0).map(() => createHuffmanTreeNode()),
+    _bl_tree: new Array(2 * BL_CODES + 1).fill(0).map(() => createHuffmanTreeNode()),
     _l_desc: createTreeDescription(),
     _d_desc: createTreeDescription(),
     _bl_desc: createTreeDescription(),

@@ -61,7 +61,7 @@ export function createZeroCopyZlibTransform<TStream extends Stream>(opts: {
         const s = opts._createStream();
         const initRet = opts._init(s);
         if (initRet != 0 && initRet != Z_OK) {
-          throw new Error(`init failed: ${initRet}`);
+          throw new Error("init failed: " + initRet);
         }
         state = { _strm: s };
       }
@@ -103,7 +103,7 @@ export function createZeroCopyZlibTransform<TStream extends Stream>(opts: {
             }
 
             if (r != Z_OK && r != Z_STREAM_END) {
-              throw new Error(`process error: ${r}`);
+              throw new Error("process error: " + r);
             }
           } finally {
             if (!leased) {
@@ -150,7 +150,7 @@ export function createZeroCopyZlibTransform<TStream extends Stream>(opts: {
             break;
           }
           if (r != Z_OK) {
-            throw new Error(`finalization error: ${r}`);
+            throw new Error("finalization error: " + r);
           }
         } finally {
           if (!leased) {
@@ -160,7 +160,7 @@ export function createZeroCopyZlibTransform<TStream extends Stream>(opts: {
       }
       const endRet = opts._end(strm);
       if (endRet != Z_OK && endRet != 0) {
-        throw new Error(`end failed: ${endRet}`);
+        throw new Error("end failed: " + endRet);
       }
     },
   });
