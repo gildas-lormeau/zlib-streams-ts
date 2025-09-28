@@ -1,0 +1,8 @@
+.DS_Store
+.vscode/
+build/
+node_modules/
+test/old/
+test/tmp/
+tmp/
+coverage/
