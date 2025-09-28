@@ -14,7 +14,7 @@ A high-performance TypeScript port of zlib, providing deflate and inflate compre
 # Installation
 
 ```bash
-npm install project-deflate-ts
+npm install zlib-streams-ts
 ```
 
 # Usage
@@ -22,7 +22,7 @@ npm install project-deflate-ts
 ### Web Streams API (Recommended)
 
 ```typescript
-import { CompressionStream, DecompressionStream } from 'project-deflate-ts';
+import { CompressionStream, DecompressionStream } from 'zlib-streams-ts';
 
 // Compression
 const compressor = new CompressionStream('deflate');
@@ -51,7 +51,7 @@ import {
   inflateInit,
   inflate,
   inflateEnd
-} from 'project-deflate-ts';
+} from 'zlib-streams-ts';
 
 // Compression
 const deflateStream = createDeflateStream();

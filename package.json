@@ -3,7 +3,7 @@
   "description": "TypeScript-based Compression Streams API implementation using zlib, with support for deflate64 decompression.",
   "author": "Gildas Lormeau",
   "license": "BSD-3-Clause",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "keywords": [
     "deflate",
