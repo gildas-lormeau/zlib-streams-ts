@@ -19,12 +19,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gildas-lormeau/zlib-streams.git"
+    "url": "git+https://github.com/gildas-lormeau/zlib-streams-ts.git"
   },
   "bugs": {
-    "url": "https://github.com/gildas-lormeau/zlib-streams/issues"
+    "url": "https://github.com/gildas-lormeau/zlib-streams-ts/issues"
   },
-  "homepage": "https://gildas-lormeau.github.io/zlib-streams",
+  "homepage": "https://gildas-lormeau.github.io/zlib-streams-ts",
   "publishConfig": {
     "access": "public"
   },
