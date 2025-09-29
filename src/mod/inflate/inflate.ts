@@ -845,7 +845,7 @@ function inflate(strm: InflateStream, flush: number): number {
             inflate_fast(strm, out);
             LOAD();
 
-            if ((state._mode as unknown as InflateMode) == InflateMode.TYPE) {
+            if ((state._mode as unknown) == InflateMode.TYPE) {
               state._back = -1;
             }
             break;
