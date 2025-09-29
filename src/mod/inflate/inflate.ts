@@ -283,7 +283,7 @@ function fixedtables(state: InflateState): void {
 }
 
 function updatewindow(strm: InflateStream, end: Uint8Array, copy: number): number {
-  const state = strm._state as InflateState;
+  const state = strm._state;
 
   if (!state._window || state._window.length == 0) {
     state._window = new Uint8Array(1 << state._w_bits);
