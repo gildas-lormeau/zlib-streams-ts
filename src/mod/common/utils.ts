@@ -74,3 +74,15 @@ export function createBaseState(strm: Stream, w_bits: number): {
     _bit_count: 0,
   };
 }
+
+export function fillData(data: number[]): Uint16Array {
+  const arr: number[] = [];
+  for (let i = 0; i < data.length; i += 2) {
+    const value = data[i];
+    const count = data[i + 1];
+    for (let i = 0; i < count; i++) {
+      arr.push(value);
+    }
+  }
+  return new Uint16Array(arr);
+}

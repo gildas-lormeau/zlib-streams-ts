@@ -158,7 +158,7 @@ export function createDeflateState(strm: DeflateStream): DeflateState {
   return state;
 }
 
-export function createHuffmanTree(treeData: Int32Array): HuffmanTreeNode[] {
+export function createHuffmanTree(treeData: Uint16Array): HuffmanTreeNode[] {
   const nodes: HuffmanTreeNode[] = [];
   for (let i = 0; i < treeData.length; i += 2) {
     const code = treeData[i];

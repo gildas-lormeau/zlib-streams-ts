@@ -1,5 +1,8 @@
 import type { HuffmanTreeNode } from "../common/types";
 
+import { BASE_DIST, BASE_LENGTH, EXTRA_LBITS_DATA, EXTRA_DBITS_DATA } from "../common/constants";
+import { fillData } from "../common/utils";
+
 import { createHuffmanTree } from "./utils";
 import {
   buildLengthCodeLookup,
@@ -48,32 +51,19 @@ export const ERROR_MESSAGES: ReadonlyArray<string> = [
   "",
 ];
 
-const BASE_LENGTH: Int32Array = new Int32Array([
-  0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 0,
-]);
-const BASE_DIST: Int32Array = new Int32Array([
-  0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096, 6144,
-  8192, 12288, 16384, 24576,
-]);
-const EXTRA_LBITS: ReadonlyArray<number> = [
-  0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0,
-];
-const EXTRA_DBITS: ReadonlyArray<number> = [
-  0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13,
-];
-const EXTRA_BLBITS: ReadonlyArray<number> = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 7];
+const EXTRA_LBITS: Uint16Array = fillData(EXTRA_LBITS_DATA);
+const EXTRA_DBITS: Uint16Array = fillData(EXTRA_DBITS_DATA);
+const EXTRA_BLBITS: Uint16Array = new Uint16Array(19);
+EXTRA_BLBITS[16] = 2;
+EXTRA_BLBITS[17] = 3;
+EXTRA_BLBITS[18] = 7;
 
-const FULL_DIST: Uint8Array = buildFullDistanceLookup(BASE_DIST, EXTRA_DBITS as ReadonlyArray<number>);
-const STATIC_LTREE_DATA: Int32Array = packCanonicalTreeData(getStaticLiteralLengths());
-const STATIC_DTREE_DATA: Int32Array = packCanonicalTreeData(new Array(30).fill(5));
+const STATIC_LTREE_DATA: Uint16Array = packCanonicalTreeData(getStaticLiteralLengths());
+const STATIC_DTREE_DATA: Uint16Array = packCanonicalTreeData(new Array(30).fill(5));
 
 export const STATIC_LTREE: ReadonlyArray<HuffmanTreeNode> = createHuffmanTree(STATIC_LTREE_DATA);
 export const STATIC_DTREE: ReadonlyArray<HuffmanTreeNode> = createHuffmanTree(STATIC_DTREE_DATA);
-export const LENGTH_CODE: Uint8Array = buildLengthCodeLookup(
-  BASE_LENGTH,
-  EXTRA_LBITS as ReadonlyArray<number>,
-  MAX_MATCH,
-);
-export const DIST_CODE: Uint8Array = buildCompactDistLookup512(FULL_DIST);
+export const LENGTH_CODE: Uint8Array = buildLengthCodeLookup(BASE_LENGTH, EXTRA_LBITS, MAX_MATCH);
+export const DIST_CODE: Uint8Array = buildCompactDistLookup512(buildFullDistanceLookup(BASE_DIST, EXTRA_DBITS));
 
 export { BASE_LENGTH, BASE_DIST, EXTRA_DBITS, EXTRA_LBITS, EXTRA_BLBITS };

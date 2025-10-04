@@ -49,3 +49,23 @@ export const BL_ORDER: ReadonlyArray<number> = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5
 export const EMPTY_UINT8 = new Uint8Array(0);
 export const EMPTY_UINT16 = new Uint16Array(0);
 export const EMPTY_HUFFMAN: ReadonlyArray<any> = [];
+
+export const EXTRA_LBITS_DATA = [];
+for (let index = 0; index < 6; index++) {
+  EXTRA_LBITS_DATA.push(index, index == 0 ? 8 : 4);
+}
+EXTRA_LBITS_DATA.push(0, 1);
+
+export const EXTRA_DBITS_DATA = [];
+for (let index = 0; index < 14; index++) {
+  EXTRA_DBITS_DATA.push(index, index == 0 ? 4 : 2);
+}
+
+export const BASE_DIST: Uint16Array = new Uint16Array([
+  0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096, 6144,
+  8192, 12288, 16384, 24576,
+]);
+
+export const BASE_LENGTH: Uint16Array = new Uint16Array([
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 0,
+]);

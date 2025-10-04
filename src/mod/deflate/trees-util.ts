@@ -17,9 +17,9 @@ export function getStaticLiteralLengths(): ReadonlyArray<number> {
   return lengths;
 }
 
-export function packCanonicalTreeData(lengths: ReadonlyArray<number>): Int32Array {
+export function packCanonicalTreeData(lengths: ReadonlyArray<number>): Uint16Array {
   const { code, length } = generateCanonicalCodes(lengths);
-  const out: number[] = new Array(lengths.length * 2);
+  const out = new Uint16Array(lengths.length * 2);
   let idx = 0;
   for (let i = 0; i < lengths.length; i++) {
     const len = length[i] || 0;
@@ -27,14 +27,10 @@ export function packCanonicalTreeData(lengths: ReadonlyArray<number>): Int32Arra
     out[idx++] = len ? bitReverse(c, len) : 0;
     out[idx++] = len;
   }
-  return new Int32Array(out);
+  return new Uint16Array(out);
 }
 
-export function buildLengthCodeLookup(
-  base: Int32Array,
-  extraBits: ReadonlyArray<number>,
-  maxMatch: number,
-): Uint8Array {
+export function buildLengthCodeLookup(base: Uint16Array, extraBits: Uint16Array, maxMatch: number): Uint8Array {
   let maxLen = 0;
   for (let j = 0; j < base.length; j++) {
     const span = extraBits[j] ? 1 << extraBits[j] : 1;
@@ -61,7 +57,7 @@ export function buildLengthCodeLookup(
   return out;
 }
 
-export function buildFullDistanceLookup(base: Int32Array, extraBits: ReadonlyArray<number>): Uint8Array {
+export function buildFullDistanceLookup(base: Uint16Array, extraBits: Uint16Array): Uint8Array {
   let maxDist = 0;
   for (let j = 0; j < base.length; j++) {
     const span = extraBits[j] ? 1 << extraBits[j] : 1;
