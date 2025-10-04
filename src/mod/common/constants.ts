@@ -50,13 +50,13 @@ export const EMPTY_UINT8 = new Uint8Array(0);
 export const EMPTY_UINT16 = new Uint16Array(0);
 export const EMPTY_HUFFMAN: ReadonlyArray<any> = [];
 
-export const EXTRA_LBITS_DATA = [];
+export const EXTRA_LBITS_DATA: number[] = [];
 for (let index = 0; index < 6; index++) {
   EXTRA_LBITS_DATA.push(index, index == 0 ? 8 : 4);
 }
 EXTRA_LBITS_DATA.push(0, 1);
 
-export const EXTRA_DBITS_DATA = [];
+export const EXTRA_DBITS_DATA: number[] = [];
 for (let index = 0; index < 14; index++) {
   EXTRA_DBITS_DATA.push(index, index == 0 ? 4 : 2);
 }
