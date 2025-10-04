@@ -3,7 +3,7 @@
   "description": "TypeScript-based Compression Streams API implementation using zlib, with support for deflate64 decompression.",
   "author": "Gildas Lormeau",
   "license": "BSD-3-Clause",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "keywords": [
     "deflate",
@@ -32,7 +32,6 @@
     "watch": "tsc --watch",
     "test": "sh -c \"find test -name '*.ts' -exec npx tsx {} ';'\"",
     "coverage:run": "rm -rf ./coverage && mkdir -p ./coverage && NODE_V8_COVERAGE=./coverage npm run test",
-    "coverage:report": "deno coverage ./coverage --lcov --output=coverage/coverage.lcov && deno coverage ./coverage --json > coverage/coverage.json && deno coverage ./coverage --detailed > coverage/coverage.txt || true",
     "coverage:c8": "rm -rf ./coverage && npx c8 --reporter=lcov --reporter=text --report-dir=coverage npm run test",
     "build:min": "node ./scripts/build-min.js"
   },
