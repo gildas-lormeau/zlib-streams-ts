@@ -21,19 +21,15 @@ LEXT_DATA.push(...LEXT_COMMON_END_DATA);
 LEXT_DATA_9.push(...LEXT_COMMON_END_DATA);
 
 export const LBASE = new Uint16Array([...LBASE_COMMON_DATA, 258, 0, 0]);
-
-export const LEXT: Uint16Array = fillData(LEXT_DATA);
-
-export const DBASE = new Uint16Array([...DBASE_COMMON_DATA, 0, 0]);
-
-export const DEXT: Uint16Array = fillData(DEXT_DATA);
-
 export const LBASE_9 = new Uint16Array([...LBASE_COMMON_DATA, 3, 0, 0]);
 
+export const LEXT: Uint16Array = fillData(LEXT_DATA);
 export const LEXT_9: Uint16Array = fillData(LEXT_DATA_9);
 
+export const DBASE = new Uint16Array([...DBASE_COMMON_DATA, 0, 0]);
 export const DBASE_9 = new Uint16Array([...DBASE_COMMON_DATA, 32769, 49153]);
 
+export const DEXT: Uint16Array = fillData(DEXT_DATA);
 export const DEXT_9: Uint16Array = fillData(DEXT_DATA_9);
 
 function mapExtValue(value: number, index: number): number {
