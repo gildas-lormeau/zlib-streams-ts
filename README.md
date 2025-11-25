@@ -126,10 +126,10 @@ new DecompressionStream(format?: 'inflate' | 'gzip' | 'deflate-raw' | 'deflate64
 
 # Supported Formats
 
-- **deflate**: Raw deflate compressed data
-- **gzip**: Gzip wrapper with header and CRC
-- **deflate-raw**: Deflate without zlib wrapper
-- **deflate64-raw**: Extended raw deflate with 64KB window
+- `deflate`: Raw deflate compressed data
+- `gzip`: Gzip wrapper with header and CRC
+- `deflate-raw`: Deflate without zlib wrapper
+- `deflate64-raw`: Extended raw deflate with 64KB window
 
 # Performance
 
