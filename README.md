@@ -92,7 +92,6 @@ A Web Streams API TransformStream for compression.
 ```typescript
 new CompressionStream(format?: 'deflate' | 'gzip' | 'deflate-raw', options?: {
   level?: number;     // 0-9, default: 6
-  strategy?: number;  // compression strategy
 })
 ```
 
