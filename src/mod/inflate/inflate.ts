@@ -31,11 +31,17 @@ import { inflate_table } from "./inftrees";
 
 import { createCode, ZSWAP32, createInflateState } from "./utils";
 
-const fixed: HuffmanCode[] = new Array(544);
+type FixedTables = {
+  _virgin: boolean;
+  _fixed: HuffmanCode[];
+  _lenfix: HuffmanCode[];
+  _distfix: HuffmanCode[];
+};
 
-let virgin = true;
-let lenfix: HuffmanCode[];
-let distfix: HuffmanCode[];
+// the fixed Huffman tables depend on the mode: deflate64 redefines the length code 285 and the
+// distance codes 30-31, so each mode caches its own tables
+const FIXED_TABLES: FixedTables = { _virgin: true, _fixed: new Array(544), _lenfix: [], _distfix: [] };
+const FIXED_TABLES_9: FixedTables = { _virgin: true, _fixed: new Array(544), _lenfix: [], _distfix: [] };
 
 export {
   createInflateStream,
@@ -218,9 +224,10 @@ function inflatePrime(strm: InflateStream, bits: number, value: number): number 
 }
 
 function fixedtables(state: InflateState): void {
+  const tables = state._deflate64 ? FIXED_TABLES_9 : FIXED_TABLES;
   let distIndexRef = { _value: 0 };
 
-  if (virgin) {
+  if (tables._virgin) {
     let sym: number, bits: number;
     let next: HuffmanCode[];
 
@@ -238,10 +245,10 @@ function fixedtables(state: InflateState): void {
       state._lens[sym++] = 8;
     }
     for (let i = 0; i < 544; i++) {
-      fixed[i] = createCode();
+      tables._fixed[i] = createCode();
     }
-    next = fixed;
-    lenfix = next;
+    next = tables._fixed;
+    tables._lenfix = next;
     bits = 9;
     const nextRef = { _value: next };
     const bitsRef = { _value: bits };
@@ -271,13 +278,13 @@ function fixedtables(state: InflateState): void {
       distIndexRef,
       state._deflate64,
     );
-    distfix = next.slice(distBaseIndex);
+    tables._distfix = next.slice(distBaseIndex);
 
-    virgin = false;
+    tables._virgin = false;
   }
-  state._lencode = lenfix;
+  state._lencode = tables._lenfix;
   state._lenbits = 9;
-  state._distcode = distfix;
+  state._distcode = tables._distfix;
   state._distbits = 5;
   state._next_index = distIndexRef._value;
 }
@@ -887,7 +894,10 @@ function inflate(strm: InflateStream, flush: number): number {
             state._mode = InflateMode.BAD;
             break;
           }
-          state._extra = here._op & 31;
+          // the extra bits count is stored in the low 4 bits of the op in deflate mode (the 16
+          // bit is a flag) and in the low 5 bits in deflate64 mode (the flag is the 128 bit and
+          // the length code 285 has 16 extra bits)
+          state._extra = here._op & (state._deflate64 ? 31 : 15);
           state._mode = InflateMode.LENEXT;
 
         case InflateMode.LENEXT:

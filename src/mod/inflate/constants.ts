@@ -8,17 +8,21 @@ export const ENOUGH_DISTS_9 = 594;
 const DBASE_COMMON_DATA = BASE_DIST.map((value) => value + 1);
 const LBASE_COMMON_DATA = BASE_LENGTH.subarray(0, -1).map((value) => value + 3);
 
-const LEXT_COMMON_END_DATA = [16, 1, 73, 1, 200, 1];
+const LEXT_END_DATA = [16, 1, 73, 1, 200, 1];
+const LEXT_END_DATA_9 = [144, 1, 72, 1, 78, 1];
 
 const DEXT_DATA = EXTRA_DBITS_DATA.map(mapExtValue);
 const DEXT_DATA_9 = EXTRA_DBITS_DATA.map(mapExt9Value);
 DEXT_DATA.push(64, 2);
 DEXT_DATA_9.push(142, 2);
 
-const LEXT_DATA = EXTRA_LBITS_DATA.map(mapExtValue);
-const LEXT_DATA_9 = EXTRA_LBITS_DATA.map(mapExt9Value);
-LEXT_DATA.push(...LEXT_COMMON_END_DATA);
-LEXT_DATA_9.push(...LEXT_COMMON_END_DATA);
+// the last pair of EXTRA_LBITS_DATA describes the length code 285, which is replaced by the end
+// data below: 258 with 0 extra bits (16) in deflate mode, 3 with 16 extra bits (144 = 128 + 16)
+// in deflate64 mode, followed by the invalid code markers (73/200 and 72/78 respectively)
+const LEXT_DATA = EXTRA_LBITS_DATA.slice(0, -2).map(mapExtValue);
+const LEXT_DATA_9 = EXTRA_LBITS_DATA.slice(0, -2).map(mapExt9Value);
+LEXT_DATA.push(...LEXT_END_DATA);
+LEXT_DATA_9.push(...LEXT_END_DATA_9);
 
 export const LBASE = new Uint16Array([...LBASE_COMMON_DATA, 258, 0, 0]);
 export const LBASE_9 = new Uint16Array([...LBASE_COMMON_DATA, 3, 0, 0]);
