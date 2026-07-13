@@ -887,7 +887,7 @@ function inflate(strm: InflateStream, flush: number): number {
             state._mode = InflateMode.BAD;
             break;
           }
-          state._extra = here._op & 15;
+          state._extra = here._op & 31;
           state._mode = InflateMode.LENEXT;
 
         case InflateMode.LENEXT:
