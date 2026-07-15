@@ -30,7 +30,7 @@
   },
   "scripts": {
     "watch": "tsc --watch",
-    "test": "sh -c \"find test -name '*.ts' -exec npx tsx {} ';'\"",
+    "test": "sh -c \"find test -name '*.ts' -print0 | xargs -0 -n1 npx tsx\"",
     "coverage:run": "rm -rf ./coverage && mkdir -p ./coverage && NODE_V8_COVERAGE=./coverage npm run test",
     "coverage:c8": "rm -rf ./coverage && npx c8 --reporter=lcov --reporter=text --report-dir=coverage npm run test",
     "build:min": "node ./scripts/build-min.js"
