@@ -3,7 +3,7 @@ import assert from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
 
-import { createInflateStream, inflateInit, inflate, inflateEnd, Z_OK, Z_STREAM_END, Z_FINISH } from "../../src/index";
+import { createInflateStream, inflateInit2_, inflate, inflateEnd, Z_OK, Z_STREAM_END, Z_FINISH } from "../../src/index";
 
 import { DecompressionStream } from "../../src/index";
 
@@ -65,8 +65,8 @@ async function streamDecompress(input: Uint8Array): Promise<Uint8Array> {
 
 function singleShotInflate(input: Uint8Array): Uint8Array {
   const out = new Uint8Array(1024 * 1024 * 8);
-  const s = createInflateStream(true);
-  let r = inflateInit(s);
+  const s = createInflateStream();
+  let r = inflateInit2_(s, -16);
   assert.strictEqual(r, Z_OK, `inflateInit failed: ${r}`);
   s.next_in = input;
   s.next_in_index = 0;

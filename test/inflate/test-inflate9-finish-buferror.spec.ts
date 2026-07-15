@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { createInflateStream, inflateInit, inflate, inflateEnd, Z_OK, Z_BUF_ERROR, Z_FINISH } from "../../src/index";
+import { createInflateStream, inflateInit2_, inflate, inflateEnd, Z_OK, Z_BUF_ERROR, Z_FINISH } from "../../src/index";
 
 // Ensure calling inflate9 with Z_FINISH when not at the end causes Z_BUF_ERROR
 test("inflate9: Z_FINISH before end returns Z_BUF_ERROR", () => {
@@ -10,8 +10,8 @@ test("inflate9: Z_FINISH before end returns Z_BUF_ERROR", () => {
   const data = fs.readFileSync(fixture);
   const input = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
 
-  const s = createInflateStream(true);
-  let r = inflateInit(s);
+  const s = createInflateStream();
+  let r = inflateInit2_(s, -16);
   assert.strictEqual(r, Z_OK);
 
   // Provide only a small portion of the input but ask for Z_FINISH

@@ -213,9 +213,9 @@ export function createZeroCopyCompressionTransform(
 export function createZeroCopyDecompressionTransform(
   type: "deflate" | "gzip" | "deflate-raw" | "deflate64-raw" = "deflate",
 ): TransformStream<Uint8Array, Lease> {
-  const wbits = type == "gzip" ? 15 + 16 : type == "deflate-raw" ? -15 : 15;
+  const wbits = type == "gzip" ? 15 + 16 : type == "deflate-raw" ? -15 : type == "deflate64-raw" ? -16 : 15;
   return createZeroCopyZlibTransform({
-    _createStream: () => createInflateStream(type == "deflate64-raw"),
+    _createStream: () => createInflateStream(),
     _init: (s) => inflateInit2_(s, wbits),
     _process: inflate,
     _end: inflateEnd,

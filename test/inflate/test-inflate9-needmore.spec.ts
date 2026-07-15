@@ -1,10 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createInflateStream, inflateInit, inflate, inflateEnd, Z_NO_FLUSH } from "../../src/index";
+import { createInflateStream, inflateInit2_, inflate, inflateEnd, Z_NO_FLUSH } from "../../src/index";
 
 test("inflate9: truncated dynamic-block triggers NeedMoreInput path (no crash)", () => {
-  const s = createInflateStream(true);
-  let r = inflateInit(s);
+  const s = createInflateStream();
+  let r = inflateInit2_(s, -16);
   assert.strictEqual(r, 0);
 
   // Provide no input so the decoder will immediately try to read bits and trigger

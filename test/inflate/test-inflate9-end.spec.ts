@@ -1,11 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { inflateEnd, createInflateStream, inflateInit, Z_OK, Z_STREAM_ERROR } from "../../src/index";
+import { inflateEnd, createInflateStream, inflateInit2_, Z_OK, Z_STREAM_ERROR } from "../../src/index";
 
 test("inflateEnd: returns Z_OK for valid stream and Z_STREAM_ERROR for invalid", () => {
-  const s = createInflateStream(true);
+  const s = createInflateStream();
   // initialize stream so state.mode is valid
-  const r = inflateInit(s);
+  const r = inflateInit2_(s, -16);
   assert.strictEqual(r, Z_OK);
   const ok = inflateEnd(s);
   assert.strictEqual(ok, Z_OK);

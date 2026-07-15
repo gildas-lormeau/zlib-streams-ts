@@ -16,7 +16,6 @@ import {
   Z_DATA_ERROR,
   DEF_WBITS,
   DEFLATE64_WINDOW_BITS,
-  GZIP_WRAPPER_OFFSET,
   WINDOW_SIZE,
   DEFLATE64_WINDOW_SIZE,
   WINDOW_BITS,
@@ -65,9 +64,9 @@ export {
   inflateCodesUsed,
 };
 
-function createInflateStream(deflate64?: boolean): InflateStream {
+function createInflateStream(): InflateStream {
   const strm: Stream = createStream();
-  strm._state = createInflateState(strm as InflateStream, Boolean(deflate64));
+  strm._state = createInflateState(strm as InflateStream, false);
   return strm as InflateStream;
 }
 
@@ -143,27 +142,22 @@ function inflateReset2(strm: InflateStream, windowBits: number): number {
     return Z_STREAM_ERROR;
   }
   state = strm._state!;
-  let maxWindowBits;
-  if (state._deflate64) {
-    windowBits = -GZIP_WRAPPER_OFFSET;
-    maxWindowBits = DEFLATE64_WINDOW_BITS;
-  } else {
-    maxWindowBits = WINDOW_BITS;
-  }
-
   if (windowBits < 0) {
-    if (windowBits < -maxWindowBits) {
+    if (windowBits < -DEFLATE64_WINDOW_BITS) {
       return Z_STREAM_ERROR;
     }
     wrap = 0;
+    state._deflate64 = windowBits == -DEFLATE64_WINDOW_BITS;
     windowBits = -windowBits;
   } else {
     wrap = (windowBits >> 4) + 5;
-    if (!state._deflate64 && windowBits < 48) {
+    state._deflate64 = false;
+    if (windowBits < 48) {
       windowBits &= WINDOW_BITS;
     }
   }
 
+  const maxWindowBits = state._deflate64 ? DEFLATE64_WINDOW_BITS : WINDOW_BITS;
   if (windowBits && (windowBits < 8 || windowBits > maxWindowBits)) {
     return Z_STREAM_ERROR;
   }
@@ -184,15 +178,12 @@ function inflateInit2_(strm: InflateStream, windowBits: number): number {
     return Z_STREAM_ERROR;
   }
   strm.msg = "";
-  const deflate64 = Boolean(strm._state._deflate64);
+  const deflate64 = windowBits == -DEFLATE64_WINDOW_BITS;
   state = createInflateState(strm, deflate64);
-  if (deflate64) {
-    windowBits = -16;
-  }
 
   strm._state = state;
   state._strm = strm;
-  state._mode = state._deflate64 ? InflateMode.TYPE : InflateMode.HEAD;
+  state._mode = deflate64 ? InflateMode.TYPE : InflateMode.HEAD;
   ret = inflateReset2(strm, windowBits);
   if (ret != Z_OK) {
   }

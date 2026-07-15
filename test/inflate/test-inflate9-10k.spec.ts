@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import fs from "node:fs";
 
-import { createInflateStream, inflateInit, inflate, inflateEnd, Z_OK, Z_STREAM_END, Z_FINISH } from "../../src/index";
+import { createInflateStream, inflateInit2_, inflate, inflateEnd, Z_OK, Z_STREAM_END, Z_FINISH } from "../../src/index";
 
 describe("inflate9: decompress test/data/10k_lines.deflate64", () => {
   it("should decompress the deflate64 fixture", () => {
@@ -12,9 +12,9 @@ describe("inflate9: decompress test/data/10k_lines.deflate64", () => {
 
     const out = new Uint8Array(1024 * 1024 * 4);
 
-    const strm = createInflateStream(true);
+    const strm = createInflateStream();
 
-    let ret = inflateInit(strm);
+    let ret = inflateInit2_(strm, -16);
     assert.strictEqual(ret, Z_OK, `inflateInit failed for both 16 and -16: ${ret}`);
 
     strm.next_in = input;

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createInflateStream, inflateInit, inflate, inflateEnd, Z_OK, Z_FINISH } from "../../src/index";
+import { createInflateStream, inflateInit2_, inflate, inflateEnd, Z_OK, Z_FINISH } from "../../src/index";
 
 // This test uses a small crafted dynamic-block header sequence that mimics
 // known zlib infcover test vectors which trigger "invalid code lengths set"
@@ -13,8 +13,8 @@ test("inflate9: invalid code lengths set -> BAD or Z_DATA_ERROR", () => {
   // Here we use a sequence that zlib's tests use to trigger the error.
   const payload = Uint8Array.from([0x04, 0x00, 0xfe, 0xff]);
 
-  const strm = createInflateStream(true);
-  let r = inflateInit(strm);
+  const strm = createInflateStream();
+  let r = inflateInit2_(strm, -16);
   assert.strictEqual(r, Z_OK);
 
   strm.next_in = payload;

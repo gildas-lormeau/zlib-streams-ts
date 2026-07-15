@@ -16,8 +16,8 @@ const OUTPUT_LENGTH_DEFLATE = 1 + 258;
 
 function inflateAll(input: Uint8Array, deflate64: boolean, outputLength: number): Uint8Array {
   const out = new Uint8Array(outputLength + 1);
-  const strm = createInflateStream(deflate64);
-  let ret = inflateInit2_(strm, -15);
+  const strm = createInflateStream();
+  let ret = inflateInit2_(strm, deflate64 ? -16 : -15);
   assert.strictEqual(ret, Z_OK, `init failed: ${ret}`);
   strm.next_in = input;
   strm.next_out = out;

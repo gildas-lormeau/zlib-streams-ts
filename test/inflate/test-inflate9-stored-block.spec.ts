@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createInflateStream, inflateInit, inflate, inflateEnd, Z_FINISH } from "../../src/index";
+import { createInflateStream, inflateInit2_, inflate, inflateEnd, Z_FINISH } from "../../src/index";
 
 // Create a raw stored block (uncompressed) as per DEFLATE stored-block format:
 // - 3 header bits: BFINAL(1 bit) + BTYPE(2 bits=00 for stored)
@@ -18,8 +18,8 @@ test("inflate9: stored block BYTEBITS alignment", () => {
   // 0xfc 0xff - NLEN = ~3 = 0xfffc
   // 0x41 0x42 0x43 - 'A' 'B' 'C'
 
-  const s = createInflateStream(true);
-  let r = inflateInit(s);
+  const s = createInflateStream();
+  let r = inflateInit2_(s, -16);
   assert.strictEqual(r, 0);
 
   s.next_in = data;

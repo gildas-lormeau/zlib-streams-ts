@@ -112,8 +112,9 @@ new DecompressionStream(format?: 'inflate' | 'gzip' | 'deflate-raw' | 'deflate64
 - `deflateEnd(stream)` - Clean up deflate stream
 
 ### Inflate
-- `createInflateStream(deflate64?)` - Create an inflate stream
+- `createInflateStream()` - Create an inflate stream
 - `inflateInit(stream)` - Initialize inflate stream
+- `inflateInit2_(stream, windowBits)` - Initialize with explicit window bits; `-16` selects raw deflate64 (same convention as the zlib-streams wasm build)
 - `inflate(stream, flush)` - Decompress data
 - `inflateEnd(stream)` - Clean up inflate stream
 

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { createInflateStream, inflateInit, inflate, inflateEnd, Z_OK, Z_FINISH } from "../../src/index";
+import { createInflateStream, inflateInit2_, inflate, inflateEnd, Z_OK, Z_FINISH } from "../../src/index";
 
 // Ensure updatewindow is exercised: run inflate9 with tiny output buffers and
 // assert that the stream state's window gets allocated (w_size > 0)
@@ -11,8 +11,8 @@ test("inflate9: updatewindow allocation with small outputs", () => {
   const data = fs.readFileSync(fixture);
   const input = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
 
-  const s = createInflateStream(true);
-  let r = inflateInit(s);
+  const s = createInflateStream();
+  let r = inflateInit2_(s, -16);
   assert.strictEqual(r, Z_OK);
   s.next_in = input;
   s.next_in_index = 0;

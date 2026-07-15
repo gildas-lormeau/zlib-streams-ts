@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { createInflateStream, inflateInit, inflate, inflateEnd, Z_OK, Z_FINISH } from "../../src/index";
+import { createInflateStream, inflateInit2_, inflate, inflateEnd, Z_OK, Z_FINISH } from "../../src/index";
 
 test("inflate9: small output buffers exercise window/updatewindow", () => {
   const fixture = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../data/10k_lines.deflate64");
@@ -11,8 +11,8 @@ test("inflate9: small output buffers exercise window/updatewindow", () => {
 
   // Reference single-shot output
   const one = new Uint8Array(1024 * 1024 * 4);
-  const sref = createInflateStream(true);
-  let r = inflateInit(sref);
+  const sref = createInflateStream();
+  let r = inflateInit2_(sref, -16);
   assert.strictEqual(r, Z_OK);
   sref.next_in = input;
   sref.next_in_index = 0;
@@ -33,8 +33,8 @@ test("inflate9: small output buffers exercise window/updatewindow", () => {
   assert.strictEqual(r, Z_OK);
 
   // Now stream with tiny output buffers (1 byte) and full input in one shot
-  const s2 = createInflateStream(true);
-  r = inflateInit(s2);
+  const s2 = createInflateStream();
+  r = inflateInit2_(s2, -16);
   assert.strictEqual(r, Z_OK);
   s2.next_in = input;
   s2.next_in_index = 0;

@@ -5,7 +5,7 @@ import path from "node:path";
 
 import {
   createInflateStream,
-  inflateInit,
+  inflateInit2_,
   inflate,
   inflateEnd,
   Z_OK,
@@ -34,8 +34,8 @@ describe("inflate9: chunked input streaming", () => {
 
     // First, get a reference output with a single-shot large output buffer.
     const singleOut = new Uint8Array(1024 * 1024 * 8);
-    const s1 = createInflateStream(true);
-    let r = inflateInit(s1);
+    const s1 = createInflateStream();
+    let r = inflateInit2_(s1, -16);
     assert.strictEqual(r, Z_OK);
     s1.next_in = input;
     s1.next_in_index = 0;
@@ -57,8 +57,8 @@ describe("inflate9: chunked input streaming", () => {
 
     // Now stream the input in small chunks and collect output chunks.
     const chunks: Uint8Array[] = [];
-    const s2 = createInflateStream(true);
-    r = inflateInit(s2);
+    const s2 = createInflateStream();
+    r = inflateInit2_(s2, -16);
     assert.strictEqual(r, Z_OK);
 
     const inChunk = 1024; // 1 KiB input chunks
