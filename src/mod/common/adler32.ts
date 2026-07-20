@@ -1,72 +1,25 @@
 const BASE = 65521;
-const NMAX = 5552;
-
-function mod(a: number): number {
-  return a % BASE >>> 0;
-}
+const BLOCK = 2000;
 
 export function adler32(adler: number, buf?: Uint8Array, len?: number): number {
   if (buf === undefined || len === undefined) {
     return 1 >>> 0;
   }
 
+  let adlerLo = adler & 0xffff;
   let sum2 = (adler >>> 16) & 0xffff;
-  adler &= 0xffff;
+  let pos = 0;
 
-  if (len == 1) {
-    adler += buf[0];
-    if (adler >= BASE) {
-      adler -= BASE;
-    }
-    sum2 += adler;
-    if (sum2 >= BASE) {
-      sum2 -= BASE;
-    }
-    return ((sum2 << 16) | adler) >>> 0;
-  }
-
-  if (len < 16) {
-    for (let i = 0; i < len; i++) {
-      adler += buf[i];
-      sum2 += adler;
-    }
-    if (adler >= BASE) {
-      adler -= BASE;
-    }
-    sum2 = mod(sum2);
-    return ((sum2 << 16) | adler) >>> 0;
-  }
-
-  while (len >= NMAX) {
-    len -= NMAX;
-    let n = Math.floor(NMAX / 16);
+  while (len > 0) {
+    let n = len > BLOCK ? BLOCK : len;
+    len -= n;
     do {
-      for (let i = 0; i < 16; i++) {
-        adler += buf[i];
-        sum2 += adler;
-      }
-      buf = buf.subarray(16);
+      adlerLo = (adlerLo + buf[pos++]) | 0;
+      sum2 = (sum2 + adlerLo) | 0;
     } while (--n);
-    adler = mod(adler);
-    sum2 = mod(sum2);
+    adlerLo %= BASE;
+    sum2 %= BASE;
   }
 
-  if (len) {
-    while (len >= 16) {
-      len -= 16;
-      for (let i = 0; i < 16; i++) {
-        adler += buf[i];
-        sum2 += adler;
-      }
-      buf = buf.subarray(16);
-    }
-    for (let i = 0; i < len; i++) {
-      adler += buf[i];
-      sum2 += adler;
-    }
-    adler = mod(adler);
-    sum2 = mod(sum2);
-  }
-
-  return ((sum2 << 16) | adler) >>> 0;
+  return ((sum2 << 16) | adlerLo) >>> 0;
 }
