@@ -16,6 +16,7 @@ export const DEF_MEM_LEVEL = 8;
 export const MIN_MATCH = 3;
 export const MAX_MATCH = 258;
 export const MIN_LOOKAHEAD = MAX_MATCH + MIN_MATCH + 1;
+export const TOO_FAR = 4096;
 export const BI_BUF_SIZE = 16;
 export const WIN_INIT = MAX_MATCH;
 export const LENGTH_CODES = 29;

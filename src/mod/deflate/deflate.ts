@@ -41,6 +41,7 @@ import {
   MAX_MEM_LEVEL,
   DEF_MEM_LEVEL,
   MIN_MATCH,
+  TOO_FAR,
   MAX_MATCH,
   MIN_LOOKAHEAD,
   LIT_BUFS,
@@ -1370,7 +1371,13 @@ function deflate_slow(s: DeflateState, flush: number): BlockState {
     if (hash_head != 0 && s._prev_length < s._max_lazy_match && s._strstart - hash_head <= MAX_DIST(s)) {
       s._match_length = longest_match(s, hash_head);
 
-      if (s._match_length <= 5 && s._strategy == Z_FILTERED) {
+      // Matches of length MIN_MATCH are discarded if their distance exceeds TOO_FAR (4096),
+      // matching zlib's deflate_slow (the TOO_FAR <= 32767 branch).
+      if (
+        s._match_length <= 5 &&
+        (s._strategy == Z_FILTERED ||
+          (s._match_length == MIN_MATCH && s._strstart - s._match_start > TOO_FAR))
+      ) {
         s._match_length = MIN_MATCH - 1;
       }
     }
