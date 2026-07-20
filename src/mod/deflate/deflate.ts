@@ -89,16 +89,16 @@ const CONFIGURATION_TABLE: ReadonlyArray<{
   _nice_length: number;
   _max_chain: number;
 }> = [
-  { _func: deflate_stored, _max_lazy: 0, _good_length: 0, _nice_length: 0, _max_chain: 0 },
-  { _func: deflate_fast, _max_lazy: 4, _good_length: 4, _nice_length: 8, _max_chain: 4 },
-  { _func: deflate_fast, _max_lazy: 5, _good_length: 5, _nice_length: 16, _max_chain: 8 },
-  { _func: deflate_fast, _max_lazy: 6, _good_length: 16, _nice_length: 32, _max_chain: 32 },
-  { _func: deflate_slow, _max_lazy: 4, _good_length: 4, _nice_length: 16, _max_chain: 16 },
-  { _func: deflate_slow, _max_lazy: 16, _good_length: 8, _nice_length: 16, _max_chain: 32 },
-  { _func: deflate_slow, _max_lazy: 16, _good_length: 16, _nice_length: 32, _max_chain: 128 },
-  { _func: deflate_slow, _max_lazy: 32, _good_length: 32, _nice_length: 128, _max_chain: 256 },
-  { _func: deflate_slow, _max_lazy: 128, _good_length: 128, _nice_length: 256, _max_chain: 1024 },
-  { _func: deflate_slow, _max_lazy: 258, _good_length: 258, _nice_length: 258, _max_chain: 4096 },
+  { _func: deflate_stored, _good_length: 0, _max_lazy: 0, _nice_length: 0, _max_chain: 0 },
+  { _func: deflate_fast, _good_length: 4, _max_lazy: 4, _nice_length: 8, _max_chain: 4 },
+  { _func: deflate_fast, _good_length: 4, _max_lazy: 5, _nice_length: 16, _max_chain: 8 },
+  { _func: deflate_fast, _good_length: 4, _max_lazy: 6, _nice_length: 32, _max_chain: 32 },
+  { _func: deflate_slow, _good_length: 4, _max_lazy: 4, _nice_length: 16, _max_chain: 16 },
+  { _func: deflate_slow, _good_length: 8, _max_lazy: 16, _nice_length: 32, _max_chain: 32 },
+  { _func: deflate_slow, _good_length: 8, _max_lazy: 16, _nice_length: 128, _max_chain: 128 },
+  { _func: deflate_slow, _good_length: 8, _max_lazy: 32, _nice_length: 128, _max_chain: 256 },
+  { _func: deflate_slow, _good_length: 32, _max_lazy: 128, _nice_length: 258, _max_chain: 1024 },
+  { _func: deflate_slow, _good_length: 32, _max_lazy: 258, _nice_length: 258, _max_chain: 4096 },
 ];
 
 function RANK(f: number): number {
