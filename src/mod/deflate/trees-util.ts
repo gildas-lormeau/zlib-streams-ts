@@ -54,6 +54,15 @@ export function buildLengthCodeLookup(base: Uint16Array, extraBits: Uint16Array,
       }
     }
   }
+  let topIndex = 0;
+  for (let j = 0; j < base.length - 1; j++) {
+    const span = extraBits[j] ? 1 << extraBits[j] : 1;
+    const end = base[j] + span - 1;
+    if (end > topIndex) {
+      topIndex = end;
+    }
+  }
+  out[topIndex] = base.length - 1;
   return out;
 }
 
