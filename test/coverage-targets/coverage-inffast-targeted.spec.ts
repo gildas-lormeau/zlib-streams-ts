@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createInflateStream, inflateInit2_ } from "../../src/index";
 import { inflate_fast } from "../../src/mod/inflate/inffast";
+import { packCode } from "../../src/mod/inflate/utils";
 import { InflateMode } from "../../src/mod/common/types";
 
 // Targeted inffast tests using synthetic lcode entries and simple input
@@ -14,8 +15,8 @@ test("inffast: emits literals for op==0 entry", () => {
   state._lenbits = 1;
   state._distbits = 1;
   const tableSize = 1 << state._lenbits;
-  state._lencode = new Array(tableSize).fill(null).map(() => ({ _op: 0, _bits: 1, _val: 65 }));
-  state._distcode = new Array(1 << state._distbits).fill(null).map(() => ({ _op: 64, _bits: 1, _val: 0 }));
+  state._lencode = Int32Array.from({ length: tableSize }, () => packCode(0, 1, 65));
+  state._distcode = Int32Array.from({ length: 1 << state._distbits }, () => packCode(64, 1, 0));
 
   // Provide input bytes so inflate_fast will fill the bit buffer (zeros are fine)
   // Provide input bytes so inflate_fast will fill the bit buffer (zeros are fine)
@@ -45,8 +46,8 @@ test("inffast: end-of-block (op & 32) sets state.mode to TYPE", () => {
   const tableSize2 = 1 << state._lenbits;
   // create distinct table entries and correct table size
   // use op=96 (32|64) so the code skips the second-level lookup and hits end-of-block
-  state._lencode = new Array(tableSize2).fill(null).map(() => ({ _op: 96, _bits: 1, _val: 0 }));
-  state._distcode = new Array(1 << state._distbits).fill(null).map(() => ({ _op: 64, _bits: 1, _val: 0 }));
+  state._lencode = Int32Array.from({ length: tableSize2 }, () => packCode(96, 1, 0));
+  state._distcode = Int32Array.from({ length: 1 << state._distbits }, () => packCode(64, 1, 0));
 
   // small input that will be consumed into the bit buffer
   strm.next_in = new Uint8Array(16).fill(0);
@@ -74,8 +75,8 @@ test("inffast: invalid code (op & 64) sets BAD mode", () => {
   state._lenbits = 1;
   state._distbits = 1;
   const tableSize3 = 1 << state._lenbits;
-  state._lencode = new Array(tableSize3).fill(null).map(() => ({ _op: 64, _bits: 1, _val: 0 }));
-  state._distcode = new Array(1 << state._distbits).fill(null).map(() => ({ _op: 64, _bits: 1, _val: 0 }));
+  state._lencode = Int32Array.from({ length: tableSize3 }, () => packCode(64, 1, 0));
+  state._distcode = Int32Array.from({ length: 1 << state._distbits }, () => packCode(64, 1, 0));
 
   strm.next_in = new Uint8Array(16).fill(0);
   strm.next_in_index = 0;

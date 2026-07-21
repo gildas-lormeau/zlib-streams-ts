@@ -1,4 +1,4 @@
-import type { Stream, InflateStream, InflateState, GzipHeader, HuffmanCode } from "../common/types";
+import type { Stream, InflateStream, InflateState, GzipHeader } from "../common/types";
 
 import { adler32 } from "../common/adler32";
 import {
@@ -28,19 +28,20 @@ import { createStream, zmemcpy } from "../common/utils";
 import { inflate_fast } from "./inffast";
 import { inflate_table } from "./inftrees";
 
-import { createCode, ZSWAP32, createInflateState } from "./utils";
+import { ZSWAP32, createInflateState } from "./utils";
 
 type FixedTables = {
   _virgin: boolean;
-  _fixed: HuffmanCode[];
-  _lenfix: HuffmanCode[];
-  _distfix: HuffmanCode[];
+  _fixed: Int32Array;
+  _lenfix: Int32Array;
+  _distfix: Int32Array;
 };
 
 // the fixed Huffman tables depend on the mode: deflate64 redefines the length code 285 and the
 // distance codes 30-31, so each mode caches its own tables
-const FIXED_TABLES: FixedTables = { _virgin: true, _fixed: new Array(544), _lenfix: [], _distfix: [] };
-const FIXED_TABLES_9: FixedTables = { _virgin: true, _fixed: new Array(544), _lenfix: [], _distfix: [] };
+const EMPTY_INT32 = new Int32Array(0);
+const FIXED_TABLES: FixedTables = { _virgin: true, _fixed: new Int32Array(544), _lenfix: EMPTY_INT32, _distfix: EMPTY_INT32 };
+const FIXED_TABLES_9: FixedTables = { _virgin: true, _fixed: new Int32Array(544), _lenfix: EMPTY_INT32, _distfix: EMPTY_INT32 };
 
 export {
   createInflateStream,
@@ -220,7 +221,7 @@ function fixedtables(state: InflateState): void {
 
   if (tables._virgin) {
     let sym: number, bits: number;
-    let next: HuffmanCode[];
+    let next: Int32Array;
 
     sym = 0;
     while (sym < 144) {
@@ -235,9 +236,7 @@ function fixedtables(state: InflateState): void {
     while (sym < 288) {
       state._lens[sym++] = 8;
     }
-    for (let i = 0; i < 544; i++) {
-      tables._fixed[i] = createCode();
-    }
+    tables._fixed.fill(0);
     next = tables._fixed;
     tables._lenfix = next;
     bits = 9;
@@ -342,8 +341,9 @@ function inflate(strm: InflateStream, flush: number): number {
   let in_index: number, out: number;
   let copy: number;
   let from_index: number;
-  let here: HuffmanCode;
-  let last: HuffmanCode;
+  // Packed Huffman entries: op = c >>> 24, bits = (c >>> 16) & 0xff, val = c & 0xffff.
+  let here: number;
+  let last: number;
   let len: number;
   let ret: number;
   let hbuf = new Uint8Array(4);
@@ -727,18 +727,18 @@ function inflate(strm: InflateStream, flush: number): number {
           while (state._have < state._nlen + state._ndist) {
             for (;;) {
               here = state._lencode[BITS(state._lenbits)];
-              if (here._bits <= bits) {
+              if (((here >>> 16) & 0xff) <= bits) {
                 break;
               }
               PULLBYTE();
             }
-            if (here._val < 16) {
-              DROPBITS(here._bits);
-              state._lens[state._have++] = here._val;
+            if ((here & 0xffff) < 16) {
+              DROPBITS(((here >>> 16) & 0xff));
+              state._lens[state._have++] = (here & 0xffff);
             } else {
-              if (here._val == 16) {
-                NEEDBITS(here._bits + 2);
-                DROPBITS(here._bits);
+              if ((here & 0xffff) == 16) {
+                NEEDBITS(((here >>> 16) & 0xff) + 2);
+                DROPBITS(((here >>> 16) & 0xff));
                 if (state._have == 0) {
                   strm.msg = "invalid bit length repeat";
                   state._mode = InflateMode.BAD;
@@ -747,15 +747,15 @@ function inflate(strm: InflateStream, flush: number): number {
                 len = state._lens[state._have - 1];
                 copy = 3 + BITS(2);
                 DROPBITS(2);
-              } else if (here._val == 17) {
-                NEEDBITS(here._bits + 3);
-                DROPBITS(here._bits);
+              } else if ((here & 0xffff) == 17) {
+                NEEDBITS(((here >>> 16) & 0xff) + 3);
+                DROPBITS(((here >>> 16) & 0xff));
                 len = 0;
                 copy = 3 + BITS(3);
                 DROPBITS(3);
               } else {
-                NEEDBITS(here._bits + 7);
-                DROPBITS(here._bits);
+                NEEDBITS(((here >>> 16) & 0xff) + 7);
+                DROPBITS(((here >>> 16) & 0xff));
                 len = 0;
                 copy = 11 + BITS(7);
                 DROPBITS(7);
@@ -851,36 +851,36 @@ function inflate(strm: InflateStream, flush: number): number {
           state._back = 0;
           for (;;) {
             here = state._lencode[BITS(state._lenbits)];
-            if (here._bits <= bits) {
+            if (((here >>> 16) & 0xff) <= bits) {
               break;
             }
             PULLBYTE();
           }
-          if (here._op && (here._op & 0xf0) == 0) {
+          if ((here >>> 24) && ((here >>> 24) & 0xf0) == 0) {
             last = here;
             for (;;) {
-              here = state._lencode[last._val + (BITS(last._bits + last._op) >> last._bits)];
-              if (last._bits + here._bits <= bits) {
+              here = state._lencode[(last & 0xffff) + (BITS(((last >>> 16) & 0xff) + (last >>> 24)) >> ((last >>> 16) & 0xff))];
+              if (((last >>> 16) & 0xff) + ((here >>> 16) & 0xff) <= bits) {
                 break;
               }
               PULLBYTE();
             }
-            DROPBITS(last._bits);
-            state._back += last._bits;
+            DROPBITS(((last >>> 16) & 0xff));
+            state._back += ((last >>> 16) & 0xff);
           }
-          DROPBITS(here._bits);
-          state._back += here._bits;
-          state._length = here._val;
-          if (here._op == 0) {
+          DROPBITS(((here >>> 16) & 0xff));
+          state._back += ((here >>> 16) & 0xff);
+          state._length = (here & 0xffff);
+          if ((here >>> 24) == 0) {
             state._mode = InflateMode.LIT;
             break;
           }
-          if (here._op & 32) {
+          if ((here >>> 24) & 32) {
             state._back = -1;
             state._mode = InflateMode.TYPE;
             break;
           }
-          if (here._op & 64) {
+          if ((here >>> 24) & 64) {
             strm.msg = "invalid literal/length code";
             state._mode = InflateMode.BAD;
             break;
@@ -888,7 +888,7 @@ function inflate(strm: InflateStream, flush: number): number {
           // the extra bits count is stored in the low 4 bits of the op in deflate mode (the 16
           // bit is a flag) and in the low 5 bits in deflate64 mode (the flag is the 128 bit and
           // the length code 285 has 16 extra bits)
-          state._extra = here._op & (state._deflate64 ? 31 : 15);
+          state._extra = (here >>> 24) & (state._deflate64 ? 31 : 15);
           state._mode = InflateMode.LENEXT;
 
         case InflateMode.LENEXT:
@@ -905,32 +905,32 @@ function inflate(strm: InflateStream, flush: number): number {
         case InflateMode.DIST:
           for (;;) {
             here = state._distcode[BITS(state._distbits)];
-            if (here._bits <= bits) {
+            if (((here >>> 16) & 0xff) <= bits) {
               break;
             }
             PULLBYTE();
           }
-          if ((here._op & 0xf0) == 0) {
+          if (((here >>> 24) & 0xf0) == 0) {
             last = here;
             for (;;) {
-              here = state._distcode[last._val + (BITS(last._bits + last._op) >> last._bits)];
-              if (last._bits + here._bits <= bits) {
+              here = state._distcode[(last & 0xffff) + (BITS(((last >>> 16) & 0xff) + (last >>> 24)) >> ((last >>> 16) & 0xff))];
+              if (((last >>> 16) & 0xff) + ((here >>> 16) & 0xff) <= bits) {
                 break;
               }
               PULLBYTE();
             }
-            DROPBITS(last._bits);
-            state._back += last._bits;
+            DROPBITS(((last >>> 16) & 0xff));
+            state._back += ((last >>> 16) & 0xff);
           }
-          DROPBITS(here._bits);
-          state._back += here._bits;
-          if (here._op & 64) {
+          DROPBITS(((here >>> 16) & 0xff));
+          state._back += ((here >>> 16) & 0xff);
+          if ((here >>> 24) & 64) {
             strm.msg = "invalid distance code";
             state._mode = InflateMode.BAD;
             break;
           }
-          state._offset = here._val;
-          state._extra = here._op & 15;
+          state._offset = (here & 0xffff);
+          state._extra = (here >>> 24) & 15;
           state._mode = InflateMode.DISTEXT;
 
         case InflateMode.DISTEXT:
@@ -1359,10 +1359,10 @@ function inflateCopy(dest: InflateStream, source: InflateStream): number {
   const newWindow = state._window && state._window.length ? new Uint8Array(state._window.length) : EMPTY_UINT8;
   const newLens = new Uint16Array(state._lens.length);
   const newWork = new Uint16Array(state._work.length);
-  const newCodes = state._codes ? state._codes.slice() : [];
-  const newNext = state._next ? state._next.slice() : [];
-  const newLencode = state._lencode ? state._lencode.slice() : [];
-  const newDistcode = state._distcode ? state._distcode.slice() : [];
+  const newCodes = state._codes ? state._codes.slice() : EMPTY_INT32;
+  const newNext = state._next ? state._next.slice() : EMPTY_INT32;
+  const newLencode = state._lencode ? state._lencode.slice() : EMPTY_INT32;
+  const newDistcode = state._distcode ? state._distcode.slice() : EMPTY_INT32;
 
   const ds: InflateState = Object.assign({}, state, {
     _strm: dest,
@@ -1389,20 +1389,16 @@ function inflateCopy(dest: InflateStream, source: InflateStream): number {
   zmemcpy(ds._work, 0, state._work, 0, state._work.length);
 
   if (state._codes && state._codes.length) {
-    for (let i = 0; i < state._codes.length; ++i) {
-      newCodes[i] = { _op: state._codes[i]._op, _bits: state._codes[i]._bits, _val: state._codes[i]._val };
-    }
+    // newCodes is already a value copy of state._codes (Int32Array.slice above).
 
-    function findSubsequenceIndex(arr: HuffmanCode[], seq: HuffmanCode[]): number {
+    function findSubsequenceIndex(arr: Int32Array, seq: Int32Array): number {
       if (!seq || seq.length == 0) {
         return -1;
       }
       for (let i = 0; i <= arr.length - seq.length; i++) {
         let ok = true;
         for (let j = 0; j < seq.length; j++) {
-          const a = arr[i + j];
-          const s = seq[j];
-          if (a._op != s._op || a._bits != s._bits || a._val != s._val) {
+          if (arr[i + j] != seq[j]) {
             ok = false;
             break;
           }

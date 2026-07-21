@@ -17,7 +17,7 @@ describe("Inflate: inflateCopy deep-copy", () => {
     // Simulate decode by setting mode and injecting some fake codes
     // @ts-ignore - reach into internals for test
     const s = src._state;
-    s._codes = new Array(32).fill(null).map(() => ({ _op: 0, _bits: 0, _val: 0 }));
+    s._codes = new Int32Array(32);
     s._lencode = s._codes.slice(0, 8);
     s._distcode = s._codes.slice(8, 16);
     s._next = s._codes.slice(16);
@@ -51,9 +51,9 @@ describe("Inflate: inflateCopy deep-copy", () => {
     // @ts-ignore
     const destCodes = dest._state._codes;
     if (srcCodes && srcCodes.length > 0) {
-      const before = srcCodes[0]._op;
-      srcCodes[0]._op = before + 1;
-      assert.notStrictEqual(srcCodes[0]._op, destCodes[0]._op);
+      const before = srcCodes[0];
+      srcCodes[0] = before + 1;
+      assert.notStrictEqual(srcCodes[0], destCodes[0]);
     }
 
     // Check that lencode/distcode/next in dest refer to elements in dest.codes (by value)
@@ -63,9 +63,9 @@ describe("Inflate: inflateCopy deep-copy", () => {
     const ddc = dest._state._distcode;
     // @ts-ignore
     const dnext = dest._state._next;
-    assert.ok(Array.isArray(dln));
-    assert.ok(Array.isArray(ddc));
-    assert.ok(Array.isArray(dnext));
+    assert.ok(dln instanceof Int32Array);
+    assert.ok(ddc instanceof Int32Array);
+    assert.ok(dnext instanceof Int32Array);
 
     // Cleanup
     inflateEnd(src);

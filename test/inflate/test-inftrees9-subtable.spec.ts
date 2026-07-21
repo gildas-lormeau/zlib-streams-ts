@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { inflate_table } from "../../src/mod/inflate/inftrees";
+import { codeOp, codeVal } from "../../src/mod/inflate/utils";
 import { CodeType } from "../../src/mod/common/types";
 
 test("inftrees9: builds sub-tables and root pointers correctly", () => {
@@ -16,7 +17,7 @@ test("inftrees9: builds sub-tables and root pointers correctly", () => {
   const codes = 4;
   const lens = new Uint16Array([1, 2, 3, 3]);
 
-  const tableRef: { _value: any[] } = { _value: new Array(1024).fill(null).map(() => ({ _op: 0, _bits: 0, _val: 0 })) };
+  const tableRef: { _value: Int32Array } = { _value: new Int32Array(1024) };
   const bitsRef = { _value: 2 }; // small root size to force sub-tables
   const work = new Uint16Array(288);
   const indexRef = { _value: 0 };
@@ -29,12 +30,12 @@ test("inftrees9: builds sub-tables and root pointers correctly", () => {
   let foundPointer = false;
   for (let low = 0; low < 1 << root; low++) {
     const entry = tableRef._value[indexRef._value - (1 << root) + low];
-    if (entry && entry._op && (entry._op & 0xf0) === 0) {
+    const op = codeOp(entry);
+    if (op && (op & 0xf0) === 0) {
       // pointer to sub-table
       foundPointer = true;
       // val should be an offset (relative) into the table
-      assert.ok(typeof entry._val === "number");
-      assert.ok(entry._val >= 0);
+      assert.ok(codeVal(entry) >= 0);
     }
   }
   assert.ok(foundPointer, "expected at least one root pointer to a sub-table");

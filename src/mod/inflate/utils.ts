@@ -1,13 +1,15 @@
-import type { InflateStream, InflateState, GzipHeader, HuffmanCode } from "../common/types";
+import type { InflateStream, InflateState, GzipHeader } from "../common/types";
 
 import { EMPTY_UINT8 } from "../common/constants";
+
+const EMPTY_INT32 = new Int32Array(0);
 import { InflateMode } from "../common/types";
 import { createBaseState } from "../common/utils";
 
 import { ENOUGH_LENS, ENOUGH_DISTS, ENOUGH_DISTS_9 } from "./constants";
 
 export function createInflateState(strm: InflateStream, deflate64: boolean): InflateState {
-  const emptyCodes: HuffmanCode[] = [];
+  const emptyCodes = EMPTY_INT32;
   const codesLength = deflate64 ? ENOUGH_LENS + ENOUGH_DISTS_9 : ENOUGH_LENS + ENOUGH_DISTS;
   const base = createBaseState(strm, 0);
 
@@ -37,7 +39,7 @@ export function createInflateState(strm: InflateStream, deflate64: boolean): Inf
     _next: emptyCodes,
     _lens: new Uint16Array(320),
     _work: new Uint16Array(288),
-    _codes: new Array(codesLength).fill(null).map(() => createCode()),
+    _codes: new Int32Array(codesLength),
     _next_index: 0,
     _sane: true,
     _back: 0,
@@ -46,16 +48,35 @@ export function createInflateState(strm: InflateStream, deflate64: boolean): Inf
   };
 }
 
-export function createCode(op: number = 0, bits: number = 0, val: number = 0): HuffmanCode {
-  return { _op: op, _bits: bits, _val: val };
+// A Huffman table entry is packed into a single 32-bit int stored in an Int32Array:
+// op in bits 24..31, bits in 16..23, val in 0..15. op never sets bit 31 (max 96), so the
+// packed value is always a non-negative int. Reading is a shift+mask; see CODE_OP/BITS/VAL.
+export function packCode(op: number, bits: number, val: number): number {
+  return (op << 24) | (bits << 16) | val;
 }
 
-export function createInvalidCodeMarker(bits: number = 1): HuffmanCode {
-  return { _op: 64, _bits: bits, _val: 0 };
+export function createCode(op: number = 0, bits: number = 0, val: number = 0): number {
+  return packCode(op, bits, val);
 }
 
-export function createEndOfBlockCode(bits: number = 0): HuffmanCode {
-  return { _op: 32 + 64, _bits: bits, _val: 0 };
+export function codeOp(c: number): number {
+  return c >>> 24;
+}
+
+export function codeBits(c: number): number {
+  return (c >>> 16) & 0xff;
+}
+
+export function codeVal(c: number): number {
+  return c & 0xffff;
+}
+
+export function createInvalidCodeMarker(bits: number = 1): number {
+  return packCode(64, bits, 0);
+}
+
+export function createEndOfBlockCode(bits: number = 0): number {
+  return packCode(32 + 64, bits, 0);
 }
 
 export function createGzipHeader(

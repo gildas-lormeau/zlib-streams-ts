@@ -1,4 +1,4 @@
-import type { InflateStream, HuffmanCode } from "../common/types";
+import type { InflateStream } from "../common/types";
 
 import { InflateMode } from "../common/types";
 
@@ -27,7 +27,8 @@ export function inflate_fast(strm: InflateStream, start: number): void {
     dist = 0,
     op = 0;
   let from_index = 0;
-  let here: HuffmanCode;
+  // Packed Huffman entry: op = here >>> 24, bits = (here >>> 16) & 0xff, val = here & 0xffff.
+  let here: number;
 
   main_loop: do {
     while (bits < 15) {
@@ -40,15 +41,15 @@ export function inflate_fast(strm: InflateStream, start: number): void {
     }
     here = lcode[hold & lmask];
     dolen: while (true) {
-      op = here._bits;
+      op = (here >>> 16) & 0xff;
       hold >>>= op;
       bits -= op;
-      op = here._op;
+      op = here >>> 24;
       if (op == 0) {
-        output[outIndex++] = here._val;
+        output[outIndex++] = here & 0xffff;
         break;
       } else if (op & 16) {
-        len = here._val;
+        len = here & 0xffff;
         op &= 15;
         if (op) {
           while (bits < op) {
@@ -76,12 +77,12 @@ export function inflate_fast(strm: InflateStream, start: number): void {
         }
         here = dcode[hold & dmask];
         dodist: while (true) {
-          op = here._bits;
+          op = (here >>> 16) & 0xff;
           hold >>>= op;
           bits -= op;
-          op = here._op;
+          op = here >>> 24;
           if (op & 16) {
-            dist = here._val;
+            dist = here & 0xffff;
             op &= 15;
             if (op) {
               while (bits < op) {
@@ -190,7 +191,7 @@ export function inflate_fast(strm: InflateStream, start: number): void {
             }
             break;
           } else if ((op & 64) == 0) {
-            here = dcode[here._val + (hold & ((1 << op) - 1))];
+            here = dcode[(here & 0xffff) + (hold & ((1 << op) - 1))];
             continue dodist;
           } else {
             strm.msg = "invalid distance code";
@@ -200,7 +201,7 @@ export function inflate_fast(strm: InflateStream, start: number): void {
         }
         break;
       } else if ((op & 64) == 0) {
-        here = lcode[here._val + (hold & ((1 << op) - 1))];
+        here = lcode[(here & 0xffff) + (hold & ((1 << op) - 1))];
         continue dolen;
       } else if (op & 32) {
         state._mode = InflateMode.TYPE;

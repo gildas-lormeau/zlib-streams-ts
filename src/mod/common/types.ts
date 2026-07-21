@@ -104,18 +104,18 @@ export interface InflateState extends State {
   _length: number;
   _offset: number;
   _extra: number;
-  _lencode: HuffmanCode[];
-  _distcode: HuffmanCode[];
+  _lencode: Int32Array;
+  _distcode: Int32Array;
   _lenbits: number;
   _distbits: number;
   _ncode: number;
   _nlen: number;
   _ndist: number;
   _have: number;
-  _next: HuffmanCode[];
+  _next: Int32Array;
   _lens: Uint16Array;
   _work: Uint16Array;
-  _codes: HuffmanCode[];
+  _codes: Int32Array;
   _next_index: number;
   _sane: boolean;
   _back: number;
@@ -217,12 +217,6 @@ export class StaticTreeDescription {
     this._elems = elems;
     this._max_length = max_length;
   }
-}
-
-export interface HuffmanCode {
-  _op: number;
-  _bits: number;
-  _val: number;
 }
 
 export type HuffmanTreeNode = { _freq: number; _code: number; _dad: number; _len: number };

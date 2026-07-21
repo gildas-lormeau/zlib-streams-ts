@@ -1,5 +1,3 @@
-import type { HuffmanCode } from "../common/types";
-
 import { CodeType } from "../common/types";
 
 import {
@@ -15,7 +13,7 @@ import {
   DBASE_9,
   DEXT_9,
 } from "./constants";
-import { createCode, createInvalidCodeMarker, createEndOfBlockCode } from "./utils";
+import { createCode, createInvalidCodeMarker, createEndOfBlockCode, packCode } from "./utils";
 
 type TableParams = {
   _lbase: Uint16Array;
@@ -65,7 +63,7 @@ export function inflate_table(
   type: CodeType,
   lens: Uint16Array,
   codes: number,
-  table: { _value: HuffmanCode[] },
+  table: { _value: Int32Array },
   bits: { _value: number },
   work: Uint16Array,
   index: { _value: number },
@@ -85,7 +83,7 @@ export function inflate_table(
   let fill: number;
   let low: number;
   let mask: number;
-  let here: HuffmanCode;
+  let here: number;
   let next_index: number;
   let base: Uint16Array;
   let extra: Uint16Array;
@@ -196,7 +194,7 @@ export function inflate_table(
     do {
       fill -= incr;
       const slot = (huff >> drop) + fill;
-      table._value[next_index + slot] = { ...here };
+      table._value[next_index + slot] = here;
     } while (fill != 0);
 
     incr = 1 << (len - 1);
@@ -245,11 +243,7 @@ export function inflate_table(
       }
 
       low = huff & mask;
-      table._value[index._value + low] = {
-        _op: curr,
-        _bits: root,
-        _val: next_index - index._value,
-      };
+      table._value[index._value + low] = packCode(curr, root, next_index - index._value);
     }
   }
 
@@ -261,10 +255,10 @@ export function inflate_table(
         len = root;
         next_index = index._value;
         curr = root;
-        here._bits = len;
+        here = createInvalidCodeMarker(len);
       }
 
-      table._value[next_index + (huff >> drop)] = { ...here };
+      table._value[next_index + (huff >> drop)] = here;
 
       incr = 1 << (len - 1);
       while (huff & incr) {
@@ -294,8 +288,8 @@ function createTableEntry(
   extra: Uint16Array,
   match: number,
   deflate64: boolean,
-): HuffmanCode {
-  let here: HuffmanCode;
+): number {
+  let here: number;
   if (deflate64 ? work[sym] < match : work[sym] + 1 < match) {
     here = createCode(0, len - drop, work[sym]);
   } else if (deflate64 ? work[sym] > match : work[sym] >= match) {

@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert";
 import { createInflateStream } from "../../src/index";
 import { inflate_fast } from "../../src/mod/inflate/inffast";
+import { packCode } from "../../src/mod/inflate/utils";
 
 // This test calls inflate_fast directly with a crafted InflateStream state to
 // force the branch where wnext < op2 (wrapped window copy) and where the
@@ -46,8 +47,8 @@ describe("Inflate: direct inffast wnext < op2", () => {
     // consuming any input bits (use zero-bit codes indexed by bitmask 0)
     state._lenbits = 0;
     state._distbits = 0;
-    state._lencode = [{ _op: 16, _bits: 0, _val: len }];
-    state._distcode = [{ _op: 16, _bits: 0, _val: dist }];
+    state._lencode = Int32Array.of(packCode(16, 0, len));
+    state._distcode = Int32Array.of(packCode(16, 0, dist));
 
     // Ensure the bit buffer is large enough so inflate_fast won't attempt to
     // read input bytes (we don't need any input for this synthetic case)

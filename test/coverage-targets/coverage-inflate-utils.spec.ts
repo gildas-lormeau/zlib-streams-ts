@@ -1,19 +1,19 @@
 import test from "node:test";
 import assert from "node:assert";
 
-import { createCode, createInvalidCodeMarker, createGzipHeader, ZSWAP32 } from "../../src/mod/inflate/utils";
+import { createCode, createInvalidCodeMarker, createGzipHeader, ZSWAP32, codeOp, codeBits, codeVal } from "../../src/mod/inflate/utils";
 
 test("inflate/utils: createCode defaults and fields", () => {
   const c = createCode();
-  assert.strictEqual(c._op, 0);
-  assert.strictEqual(c._bits, 0);
-  assert.strictEqual(c._val, 0);
+  assert.strictEqual(codeOp(c), 0);
+  assert.strictEqual(codeBits(c), 0);
+  assert.strictEqual(codeVal(c), 0);
 });
 
 test("inflate/utils: createInvalidCodeMarker and end-of-block markers", () => {
   const m = createInvalidCodeMarker(3);
-  assert.strictEqual(m._op, 64);
-  assert.strictEqual(m._bits, 3);
+  assert.strictEqual(codeOp(m), 64);
+  assert.strictEqual(codeBits(m), 3);
 });
 
 test("inflate/utils: createGzipHeader returns defaults", () => {

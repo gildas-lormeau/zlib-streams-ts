@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert";
 import { createInflateStream } from "../../src/index";
 import { inflate_fast } from "../../src/mod/inflate/inffast";
+import { packCode } from "../../src/mod/inflate/utils";
 
 describe("Coverage: inffast targeted branches", () => {
   it("writes expected bytes when op3 >= copyLen (no wrap needed)", () => {
@@ -34,8 +35,8 @@ describe("Coverage: inffast targeted branches", () => {
     // design lencode/distcode to produce the distance and length
     state._lenbits = 0;
     state._distbits = 0;
-    state._lencode = [{ _op: 16, _bits: 0, _val: len }];
-    state._distcode = [{ _op: 16, _bits: 0, _val: dist }];
+    state._lencode = Int32Array.of(packCode(16, 0, len));
+    state._distcode = Int32Array.of(packCode(16, 0, dist));
 
     state._bit_buffer = 0;
     state._bit_count = 15;
@@ -122,8 +123,8 @@ describe("Coverage: inffast targeted branches", () => {
 
     state._lenbits = 0;
     state._distbits = 0;
-    state._lencode = [{ _op: 16, _bits: 0, _val: len }];
-    state._distcode = [{ _op: 16, _bits: 0, _val: dist }];
+    state._lencode = Int32Array.of(packCode(16, 0, len));
+    state._distcode = Int32Array.of(packCode(16, 0, dist));
 
     state._bit_buffer = 0;
     state._bit_count = 15;
