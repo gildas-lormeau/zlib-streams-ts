@@ -1060,34 +1060,39 @@ function longest_match(s: DeflateState, cur_match: number): number {
   const limit = s._strstart > MAX_DIST(s) ? s._strstart - MAX_DIST(s) : 0;
   const prev = s._prev;
   const wmask = s._w_mask;
+  // Hoist the window and lookahead out of the chain-walk loop: they are invariant across
+  // the whole search, so reading them as object properties on every iteration (the chain can
+  // be thousands deep at high levels) is pure overhead. maxCompare is likewise loop-invariant.
+  const win = s._window;
+  const lookahead = s._lookahead;
+  const maxCompare = MAX_MATCH < lookahead ? MAX_MATCH : lookahead;
 
-  const scan_start = s._window[scan_index];
-  const scan_next = s._window[scan_index + 1];
-  let scan_end1 = s._window[scan_index + best_len - 1];
-  let scan_end = s._window[scan_index + best_len];
+  const scan_start = win[scan_index];
+  const scan_next = win[scan_index + 1];
+  let scan_end1 = win[scan_index + best_len - 1];
+  let scan_end = win[scan_index + best_len];
 
-  if (s._prev_length >= s._good_match) {
+  if (best_len >= s._good_match) {
     chain_length >>= 2;
   }
-  if (nice_match > s._lookahead) {
-    nice_match = s._lookahead;
+  if (nice_match > lookahead) {
+    nice_match = lookahead;
   }
 
   do {
     matchIndex = cur_match;
 
     if (
-      s._window[matchIndex + best_len] != scan_end ||
-      s._window[matchIndex + best_len - 1] != scan_end1 ||
-      s._window[matchIndex] != scan_start ||
-      s._window[matchIndex + 1] != scan_next
+      win[matchIndex + best_len] != scan_end ||
+      win[matchIndex + best_len - 1] != scan_end1 ||
+      win[matchIndex] != scan_start ||
+      win[matchIndex + 1] != scan_next
     ) {
       continue;
     }
 
-    const maxCompare = Math.min(MAX_MATCH, s._lookahead);
     let k = 2;
-    while (k < maxCompare && s._window[scan_index + k] == s._window[matchIndex + k]) {
+    while (k < maxCompare && win[scan_index + k] == win[matchIndex + k]) {
       k++;
     }
     len = k;
@@ -1098,15 +1103,15 @@ function longest_match(s: DeflateState, cur_match: number): number {
       if (len >= nice_match) {
         break;
       }
-      scan_end1 = s._window[scan_index + best_len - 1];
-      scan_end = s._window[scan_index + best_len];
+      scan_end1 = win[scan_index + best_len - 1];
+      scan_end = win[scan_index + best_len];
     }
   } while ((cur_match = prev[cur_match & wmask]) > limit && --chain_length != 0);
 
-  if (best_len <= s._lookahead) {
+  if (best_len <= lookahead) {
     return best_len;
   }
-  return s._lookahead;
+  return lookahead;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
