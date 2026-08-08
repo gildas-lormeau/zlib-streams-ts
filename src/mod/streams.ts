@@ -44,7 +44,7 @@ export function createZeroCopyZlibTransform<TStream extends Stream>(opts: {
   _end: (s: TStream) => number;
 }): TransformStream<Uint8Array, Lease> {
   const pool = new BufferPool(32, DEFAULT_OUT_BUFFER);
-  let state: { _strm: TStream } | null = null;
+  let state: { _strm: TStream; _ended?: boolean } | null = null;
 
   function release(outBuf: Uint8Array): void {
     try {
@@ -67,6 +67,9 @@ export function createZeroCopyZlibTransform<TStream extends Stream>(opts: {
       }
 
       const strm: TStream = state._strm;
+      if (state._ended) {
+        return;
+      }
       let readOffset = 0;
       while (readOffset < chunk.length) {
         const toRead = Math.min(chunk.length - readOffset, IN_CHUNK);
@@ -102,7 +105,11 @@ export function createZeroCopyZlibTransform<TStream extends Stream>(opts: {
               controller.enqueue(lease);
             }
 
-            if (r != Z_OK && r != Z_STREAM_END) {
+            if (r == Z_STREAM_END) {
+              state._ended = true;
+              break;
+            }
+            if (r != Z_OK) {
               throw new Error("process error: " + r);
             }
           } finally {
@@ -112,11 +119,14 @@ export function createZeroCopyZlibTransform<TStream extends Stream>(opts: {
           }
         }
 
+        if (state._ended) {
+          break;
+        }
         readOffset += toRead;
       }
     },
     flush(controller: TransformStreamDefaultController<Lease>): void {
-      if (!state) {
+      if (!state || state._ended) {
         return;
       }
       const strm: TStream = state._strm;
