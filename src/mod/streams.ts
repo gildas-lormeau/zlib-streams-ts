@@ -46,6 +46,15 @@ export function createZeroCopyZlibTransform<TStream extends Stream>(opts: {
   const pool = new BufferPool(32, DEFAULT_OUT_BUFFER);
   let state: { _strm: TStream; _ended?: boolean } | null = null;
 
+  function initState(): { _strm: TStream; _ended?: boolean } {
+    const s = opts._createStream();
+    const initRet = opts._init(s);
+    if (initRet != 0 && initRet != Z_OK) {
+      throw new Error("init failed: " + initRet);
+    }
+    return { _strm: s };
+  }
+
   function release(outBuf: Uint8Array): void {
     try {
       pool.release(outBuf);
@@ -58,12 +67,7 @@ export function createZeroCopyZlibTransform<TStream extends Stream>(opts: {
     start(): void {},
     transform(chunk: Uint8Array, controller: TransformStreamDefaultController<Lease>): void {
       if (!state) {
-        const s = opts._createStream();
-        const initRet = opts._init(s);
-        if (initRet != 0 && initRet != Z_OK) {
-          throw new Error("init failed: " + initRet);
-        }
-        state = { _strm: s };
+        state = initState();
       }
 
       const strm: TStream = state._strm;
@@ -126,8 +130,11 @@ export function createZeroCopyZlibTransform<TStream extends Stream>(opts: {
       }
     },
     flush(controller: TransformStreamDefaultController<Lease>): void {
-      if (!state || state._ended) {
+      if (state && state._ended) {
         return;
+      }
+      if (!state) {
+        state = initState();
       }
       const strm: TStream = state._strm;
       while (true) {
