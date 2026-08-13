@@ -20,7 +20,7 @@ esbuild
     sourcemap: false,
     outfile: out,
     inject: [path.resolve(process.cwd(), "scripts/esbuild-inject-globals.js")],
-    target: ["es2020"],
+    target: ["es2019"],
   })
   .then(async () => {
     const code = readFileSync(out, "utf8");
