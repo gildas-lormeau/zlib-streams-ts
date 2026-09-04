@@ -1062,8 +1062,8 @@ function inflate(strm: InflateStream, flush: number): number {
       state._w_size ||
       (out != strm.avail_out &&
         state._mode < InflateMode.BAD &&
-        (state._deflate64 ? state._mode < InflateMode.DONE : state._mode < InflateMode.CHECK)) ||
-      flush != Z_FINISH
+        ((state._deflate64 ? state._mode < InflateMode.DONE : state._mode < InflateMode.CHECK) ||
+          flush != Z_FINISH))
     ) {
       const written = out - strm.avail_out;
       if (updatewindow(strm, strm.next_out.subarray(strm.next_out_index - written, strm.next_out_index), written)) {
