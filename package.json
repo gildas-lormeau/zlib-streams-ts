@@ -17,6 +17,10 @@
     "./package.json": "./package.json",
     "./zlib-streams.js": "./dist/zlib-streams.min.js"
   },
+  "files": [
+    "src",
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gildas-lormeau/zlib-streams-ts.git"
