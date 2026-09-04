@@ -106,6 +106,10 @@ export function createGzipHeader(
 
 export function ZSWAP32(value: number): number {
   return (
-    ((value & 0xff) << 24) | (((value >> 8) & 0xff) << 16) | (((value >> 16) & 0xff) << 8) | ((value >> 24) & 0xff)
+    (((value & 0xff) << 24) |
+      (((value >> 8) & 0xff) << 16) |
+      (((value >> 16) & 0xff) << 8) |
+      ((value >> 24) & 0xff)) >>>
+    0
   );
 }

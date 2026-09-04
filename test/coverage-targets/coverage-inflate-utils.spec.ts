@@ -1,7 +1,15 @@
 import test from "node:test";
 import assert from "node:assert";
 
-import { createCode, createInvalidCodeMarker, createGzipHeader, ZSWAP32, codeOp, codeBits, codeVal } from "../../src/mod/inflate/utils";
+import {
+  createCode,
+  createInvalidCodeMarker,
+  createGzipHeader,
+  ZSWAP32,
+  codeOp,
+  codeBits,
+  codeVal,
+} from "../../src/mod/inflate/utils";
 
 test("inflate/utils: createCode defaults and fields", () => {
   const c = createCode();
@@ -29,4 +37,9 @@ test("inflate/utils: ZSWAP32 byte swaps correctly", () => {
   const swapped = ZSWAP32(v);
   // bytes reversed -> 0x44332211
   assert.strictEqual(swapped >>> 0, 0x44332211);
+  // the result must be unsigned: it is compared against adler32(), which returns unsigned, so a
+  // negative value here rejects every dictionary and every check value with bit 31 set
+  const highBit = ZSWAP32(0x000000ff);
+  assert.strictEqual(highBit, 0xff000000);
+  assert.ok(highBit > 0, "ZSWAP32 must not return a negative number");
 });

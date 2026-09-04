@@ -1238,7 +1238,7 @@ function inflateSetDictionary(strm: InflateStream, dictionary: Uint8Array, dictL
     }
   }
 
-  ret = updatewindow(strm, dictionary, dictLength);
+  ret = updatewindow(strm, dictionary.subarray(0, dictLength), dictLength);
   if (ret) {
     state._mode = InflateMode.MEM;
     return Z_MEM_ERROR;
