@@ -139,6 +139,11 @@ export function inflate_fast(strm: InflateStream, start: number): void {
                     }
                     copyLen -= w_next;
                     from_index = outIndex - dist;
+                  } else {
+                    for (let i = 0; i < copyLen; ++i) {
+                      output[outIndex++] = window[from_index++];
+                    }
+                    continue main_loop;
                   }
                 } else {
                   for (let i = 0; i < copyLen; ++i) {
