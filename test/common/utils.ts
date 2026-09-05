@@ -125,3 +125,54 @@ export function chunkedInflate(
   }
   return out_pos;
 }
+
+// chunkedInflate above writes into one output array with an advancing offset, which keeps most
+// copies inside that array. The streams API does the opposite: input arrives in slices and every
+// output buffer is fresh, so anything reaching before the current buffer comes from the sliding
+// window. That is the shape that hid the inffast window-wrap bug, so inflate tests that care
+// about the window should drive the codec through this instead.
+export function streamingInflate(input: Uint8Array, wbits: number, inChunk: number, outSize: number): Uint8Array {
+  const strm = createInflateStream();
+  assert.strictEqual(inflateInit2_(strm, wbits), Z_OK);
+  const pieces: Uint8Array[] = [];
+  let readOffset = 0;
+  let ret = Z_OK;
+  while (readOffset < input.length) {
+    const toRead = Math.min(input.length - readOffset, inChunk);
+    const slice = input.subarray(readOffset, readOffset + toRead);
+    strm.next_in = slice;
+    strm.next_in_index = 0;
+    strm.avail_in = slice.length;
+    let ended = false;
+    while (strm.avail_in > 0) {
+      const outBuffer = new Uint8Array(outSize);
+      strm.next_out = outBuffer;
+      strm.next_out_index = 0;
+      strm.avail_out = outBuffer.length;
+      ret = inflate(strm, Z_NO_FLUSH);
+      const produced = outBuffer.length - strm.avail_out;
+      if (produced) {
+        pieces.push(outBuffer.slice(0, produced));
+      }
+      if (ret == Z_STREAM_END || ret != Z_OK) {
+        ended = true;
+        break;
+      }
+    }
+    if (ended) {
+      break;
+    }
+    readOffset += toRead;
+  }
+  const message = strm.msg;
+  inflateEnd(strm);
+  assert.strictEqual(ret, Z_STREAM_END, `inflate returned ${ret}: ${message}`);
+  const total = pieces.reduce((sum, piece) => sum + piece.length, 0);
+  const output = new Uint8Array(total);
+  let position = 0;
+  for (const piece of pieces) {
+    output.set(piece, position);
+    position += piece.length;
+  }
+  return output;
+}
