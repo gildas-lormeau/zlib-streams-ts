@@ -393,6 +393,7 @@ function deflateSetDictionary(strm: DeflateStream, dictionary: Uint8Array, dictL
 
   const avail = strm.avail_in;
   const next = strm.next_in;
+  const next_index = strm.next_in_index;
   strm.avail_in = dictLength;
   strm.next_in = dictionary;
   strm.next_in_index = dictionary_index;
@@ -417,7 +418,7 @@ function deflateSetDictionary(strm: DeflateStream, dictionary: Uint8Array, dictL
   s._match_length = s._prev_length = MIN_MATCH - 1;
   s._match_available = 0;
   strm.next_in = next;
-  strm.next_in_index = avail - strm.avail_in;
+  strm.next_in_index = next_index;
   strm.avail_in = avail;
   s._wrap = wrap;
   return Z_OK;

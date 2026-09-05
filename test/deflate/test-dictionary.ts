@@ -1,6 +1,7 @@
 import { assertArraysEqual } from "../common/utils";
 import { describe, it } from "node:test";
 import assert from "node:assert";
+import * as zlib from "node:zlib";
 
 import {
   createDeflateStream,
@@ -97,5 +98,49 @@ describe("Deflate: dictionary support", () => {
     assertArraysEqual(inflated, payload, "dictionary roundtrip failed");
     ret = inflateEnd(inf);
     assert.strictEqual(ret, Z_OK);
+  });
+
+  // zlib saves and restores next_in/avail_in around the dictionary so that input
+  // already assigned by the caller survives the call. Setting the dictionary first,
+  // as the test above does, is the one order where a broken restore looks correct.
+  it("keeps the pending input when the dictionary is set after it", () => {
+    const dict = new TextEncoder().encode("example-dictionary-data: repeated words repeated words");
+    const payload = new TextEncoder().encode("repeated words repeated words and some extra payload data");
+
+    const def = createDeflateStream();
+    let ret = deflateInit(def, 6);
+    assert.strictEqual(ret, Z_OK);
+
+    const comp = new Uint8Array(OUT_SIZE);
+    def.next_in = payload;
+    def.next_in_index = 0;
+    def.avail_in = payload.length;
+
+    ret = deflateSetDictionary(def, dict, dict.length);
+    assert.strictEqual(ret, Z_OK);
+    assert.strictEqual(def.next_in_index, 0, "next_in_index was not restored");
+    assert.strictEqual(def.avail_in, payload.length, "avail_in was not restored");
+
+    def.next_out = comp;
+    def.next_out_index = 0;
+    def.avail_out = comp.length;
+    do {
+      ret = deflate(def, Z_FINISH);
+      if (ret === Z_STREAM_END) {
+        break;
+      }
+      if (ret !== Z_OK) {
+        throw new Error(`deflate error: ${ret}`);
+      }
+      if (def.avail_out === 0) {
+        break;
+      }
+    } while (true);
+    const compLen = def.next_out_index;
+    ret = deflateEnd(def);
+    assert.strictEqual(ret, Z_OK);
+
+    const inflated = zlib.inflateSync(Buffer.from(comp.subarray(0, compLen)), { dictionary: Buffer.from(dict) });
+    assertArraysEqual(new Uint8Array(inflated), payload, "dictionary roundtrip failed");
   });
 });
