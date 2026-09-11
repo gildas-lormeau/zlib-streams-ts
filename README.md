@@ -162,7 +162,7 @@ npm run build:min  # Create minified build
 
 # License
 
-This project is licensed under the MIT License. See [LICENSE.md](LICENSE.md) for details.
+This project is licensed under the BSD 3-Clause License. It is a port of zlib, which is distributed under the zlib license. See [LICENSE.md](LICENSE.md) for details.
 
 # Acknowledgments
 
