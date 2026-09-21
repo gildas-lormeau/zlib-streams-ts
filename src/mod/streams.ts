@@ -220,11 +220,31 @@ export function zeroCopyToStandard(): TransformStream<Lease, Uint8Array> {
   });
 }
 
+const COMPRESSION_WINDOW_BITS = new Map<string, number>([
+  ["deflate", 15],
+  ["gzip", 15 + 16],
+  ["deflate-raw", -15],
+]);
+const DECOMPRESSION_WINDOW_BITS = new Map<string, number>([
+  ["deflate", 15],
+  ["gzip", 15 + 16],
+  ["deflate-raw", -15],
+  ["deflate64-raw", -16],
+]);
+
+function windowBitsOf(windowBits: Map<string, number>, type: string): number {
+  const wbits = windowBits.get(type);
+  if (wbits === undefined) {
+    throw new TypeError(`Unsupported format: ${type}`);
+  }
+  return wbits;
+}
+
 export function createZeroCopyCompressionTransform(
   type: "deflate" | "gzip" | "deflate-raw" = "deflate",
   options?: { level?: number },
 ): TransformStream<Uint8Array, Lease> {
-  const wbits = type == "gzip" ? 15 + 16 : type == "deflate-raw" ? -15 : 15;
+  const wbits = windowBitsOf(COMPRESSION_WINDOW_BITS, type);
   const level = options && typeof options.level == "number" ? options.level : Z_DEFAULT_COMPRESSION;
   return createZeroCopyZlibTransform({
     _createStream: () => createDeflateStream(),
@@ -237,7 +257,7 @@ export function createZeroCopyCompressionTransform(
 export function createZeroCopyDecompressionTransform(
   type: "deflate" | "gzip" | "deflate-raw" | "deflate64-raw" = "deflate",
 ): TransformStream<Uint8Array, Lease> {
-  const wbits = type == "gzip" ? 15 + 16 : type == "deflate-raw" ? -15 : type == "deflate64-raw" ? -16 : 15;
+  const wbits = windowBitsOf(DECOMPRESSION_WINDOW_BITS, type);
   return createZeroCopyZlibTransform({
     _createStream: () => createInflateStream(),
     _init: (s) => inflateInit2_(s, wbits),
