@@ -32,7 +32,7 @@ const compressed = await new Response('Hello World').body
   .read();
 
 // Decompression
-const decompressor = new DecompressionStream('inflate');
+const decompressor = new DecompressionStream('deflate');
 const decompressed = await new Response(compressed.value).body
   .pipeThrough(decompressor)
   .getReader()
@@ -100,8 +100,10 @@ new CompressionStream(format?: 'deflate' | 'gzip' | 'deflate-raw', options?: {
 A Web Streams API TransformStream for decompression.
 
 ```typescript
-new DecompressionStream(format?: 'inflate' | 'gzip' | 'deflate-raw' | 'deflate64-raw')
+new DecompressionStream(format?: 'deflate' | 'gzip' | 'deflate-raw' | 'deflate64-raw')
 ```
+
+Both classes default to `'deflate'`. Bytes following the end of a stream are rejected with an error, whatever the format, as the `DecompressionStream` of the browsers does; concatenated gzip members are not decoded. A stream that cannot allocate its state throws a `RangeError`.
 
 ## Low-level Functions
 
@@ -127,10 +129,10 @@ new DecompressionStream(format?: 'inflate' | 'gzip' | 'deflate-raw' | 'deflate64
 
 # Supported Formats
 
-- `deflate`: Raw deflate compressed data
+- `deflate`: Deflate data in the zlib wrapper (RFC 1950), with its header and Adler-32 checksum
 - `gzip`: Gzip wrapper with header and CRC
-- `deflate-raw`: Deflate without zlib wrapper
-- `deflate64-raw`: Extended raw deflate with 64KB window
+- `deflate-raw`: Deflate without any wrapper (RFC 1951)
+- `deflate64-raw`: Extended raw deflate with 64KB window, decompression only
 
 # Performance
 
