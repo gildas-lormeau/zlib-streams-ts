@@ -5,6 +5,7 @@ import type { Stream } from "./common/types";
 
 const DEFAULT_OUT_BUFFER = 64 * 1024;
 const IN_CHUNK = 32 * 1024;
+const ERR_TRAILING_DATA = "trailing data after the end of the stream";
 
 export type Lease = { _chunk: Uint8Array; release: () => void };
 
@@ -72,6 +73,9 @@ export function createZeroCopyZlibTransform<TStream extends Stream>(opts: {
 
       const strm: TStream = state._strm;
       if (state._ended) {
+        if (chunk.length) {
+          throw new Error(ERR_TRAILING_DATA);
+        }
         return;
       }
       let readOffset = 0;
@@ -124,6 +128,9 @@ export function createZeroCopyZlibTransform<TStream extends Stream>(opts: {
         }
 
         if (state._ended) {
+          if (strm.avail_in > 0 || readOffset + toRead < chunk.length) {
+            throw new Error(ERR_TRAILING_DATA);
+          }
           break;
         }
         readOffset += toRead;
